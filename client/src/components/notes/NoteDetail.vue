@@ -4,7 +4,7 @@
       <span>Título</span>
       <span>{{ note.title }}</span>
     </div>
-    <div>
+    <div v-if="note.content">
       <span>Contenido</span>
       <span>{{ note.content }}</span>
     </div>
