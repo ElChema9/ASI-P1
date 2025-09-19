@@ -8,6 +8,18 @@
       <span>Contenido</span>
       <span>{{ note.content }}</span>
     </div>
+    <div>
+      <span>Categorías</span>
+      <p>
+        <span>{{ categoriesAsString }}</span>
+      </p>
+    </div>
+    <div>
+      <span>Fecha </span>
+      <span
+        >{{ note.timestamp.toLocaleDateString() }} - {{ note.timestamp.toLocaleTimeString() }}</span
+      >
+    </div>
   </div>
 </template>
 
@@ -19,6 +31,15 @@ export default {
     return {
       note: null
     };
+  },
+  computed: {
+    categoriesAsString() {
+      return this.note.categories
+        .map(function (cat) {
+          return cat.name;
+        })
+        .join(", ");
+    }
   },
   async mounted() {
     this.note = await NoteRepository.findOne(this.$route.params.noteId);
