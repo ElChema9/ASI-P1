@@ -13,6 +13,8 @@ export default {
     response.data.forEach(applyDate);
     return response.data;
   },
+  // Quitar findAllIncludingArchived() ya que causa problemas
+  
   async findOne(id) {
     const response = await HTTP.get(`${resource}/${id}`);
     applyDate(response.data);
@@ -21,17 +23,13 @@ export default {
   async findByCategory(categoryId) {
     console.log('Filtrando por categoría ID:', categoryId);
     
-    // Obtener todas las notas
-    const allNotes = await this.findAll();
+    const allNotes = await this.findAll(); // Usar findAll() normal
     console.log('Todas las notas:', allNotes);
     
-    // Filtrar por categoría en el frontend
     const filteredNotes = allNotes.filter(note => {
       if (!note.categories || note.categories.length === 0) {
         return false;
       }
-      
-      // Verificar si la nota tiene la categoría buscada
       return note.categories.some(cat => cat.id == categoryId);
     });
     
