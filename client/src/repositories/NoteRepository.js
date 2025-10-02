@@ -19,9 +19,24 @@ export default {
     return response.data;
   },
   async findByCategory(categoryId) {
-    const response = await HTTP.get(`${resource}?category=${categoryId}`);
-    response.data.forEach(applyDate);
-    return response.data;
+    console.log('Filtrando por categoría ID:', categoryId);
+    
+    // Obtener todas las notas
+    const allNotes = await this.findAll();
+    console.log('Todas las notas:', allNotes);
+    
+    // Filtrar por categoría en el frontend
+    const filteredNotes = allNotes.filter(note => {
+      if (!note.categories || note.categories.length === 0) {
+        return false;
+      }
+      
+      // Verificar si la nota tiene la categoría buscada
+      return note.categories.some(cat => cat.id == categoryId);
+    });
+    
+    console.log('Notas filtradas para categoría', categoryId, ':', filteredNotes);
+    return filteredNotes;
   },
   async create(note) {
     const response = await HTTP.post(resource, note);
@@ -32,10 +47,7 @@ export default {
     return response.data;
   },
   async archive(id) {
-    // Obtener la nota actual
     const currentNote = await this.findOne(id);
-    
-    // Crear un objeto limpio solo con los campos necesarios
     const noteToUpdate = {
       id: currentNote.id,
       title: currentNote.title,
@@ -43,14 +55,10 @@ export default {
       archived: true,
       categories: currentNote.categories
     };
-    
     return await this.update(noteToUpdate);
   },
   async unarchive(id) {
-    // Obtener la nota actual
     const currentNote = await this.findOne(id);
-    
-    // Crear un objeto limpio solo con los campos necesarios
     const noteToUpdate = {
       id: currentNote.id,
       title: currentNote.title,
@@ -58,7 +66,6 @@ export default {
       archived: false,
       categories: currentNote.categories
     };
-    
     return await this.update(noteToUpdate);
   }
 };

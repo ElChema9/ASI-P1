@@ -24,7 +24,7 @@ export default [
   },
   {
     path: "/notes/:noteId",
-    name: "noteDetail",
+    name: "noteDetail", 
     component: NoteDetail,
     meta: { requiresAuth: true }
   }

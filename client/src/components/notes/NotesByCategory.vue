@@ -33,17 +33,26 @@ export default {
   },
   async mounted() {
     const categoryId = this.$route.params.categoryId;
+    console.log('Category ID desde route:', categoryId);
     
     // Obtener el nombre de la categoría
     try {
       const category = await CategoryRepository.findOne(categoryId);
+      console.log('Categoría encontrada:', category);
       this.categoryName = category.name;
     } catch (e) {
+      console.error('Error al obtener categoría:', e);
       this.categoryName = "Categoría desconocida";
     }
     
     // Obtener las notas de esa categoría
-    this.notes = await NoteRepository.findByCategory(categoryId);
+    try {
+      this.notes = await NoteRepository.findByCategory(categoryId);
+      console.log('Notas encontradas:', this.notes);
+    } catch (e) {
+      console.error('Error al obtener notas por categoría:', e);
+      this.notes = [];
+    }
   }
 };
 </script>

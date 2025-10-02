@@ -3,6 +3,7 @@
     <div class="card-header d-flex justify-content-between align-items-center">
       <span>{{ note.owner }}</span>
       <button 
+        v-if="isOwner"
         @click="toggleArchive" 
         class="btn btn-sm" 
         :class="note.archived ? 'btn-success' : 'btn-warning'"
@@ -10,6 +11,7 @@
       >
         {{ note.archived ? 'Desarchivar' : 'Archivar' }}
       </button>
+      <small v-else class="text-muted">No archivable</small>
     </div>
     <div class="card-body">
       <h5 class="card-title">{{ note.title }}</h5>
@@ -28,6 +30,7 @@
         <router-link 
           :to="{ name: 'notesByCategory', params: { categoryId: category.id } }"
           class="text-decoration-none"
+          @click="debugCategoryClick(category)"
         >
           {{ category.name }}
         </router-link>
@@ -40,6 +43,7 @@
 <script>
 import NoteRepository from "@/repositories/NoteRepository";
 import auth from "@/common/auth";
+import { getStore } from "@/common/store";
 
 export default {
   props: {
@@ -53,6 +57,14 @@ export default {
       isLoading: false
     };
   },
+  computed: {
+    isOwner() {
+      const store = getStore();
+      const currentUser = store.state.user.login;
+      console.log('Usuario actual:', currentUser, 'Propietario nota:', this.note.owner);
+      return this.note.owner === currentUser;
+    }
+  },
   methods: {
     formatDate(timestamp) {
       const date = new Date(timestamp);
@@ -62,6 +74,9 @@ export default {
       const hours = date.getHours().toString().padStart(2, '0');
       const minutes = date.getMinutes().toString().padStart(2, '0');
       return `${day}/${month}/${year}, a las ${hours}:${minutes}`;
+    },
+    debugCategoryClick(category) {
+      console.log('Clickeando en categoría:', category);
     },
     async toggleArchive() {
       this.isLoading = true;
