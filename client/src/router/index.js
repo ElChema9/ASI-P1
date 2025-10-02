@@ -2,6 +2,8 @@ import { createRouter, createWebHistory } from "vue-router";
 import AboutView from "../views/AboutView.vue";
 import ErrorNotFoundView from "../views/ErrorNotFoundView.vue";
 import LoginForm from "../components/LoginForm.vue";
+import RegisterForm from "@/components/RegisterForm.vue";
+import CreateNote from "@/components/notes/CreateNote.vue";
 
 import auth from "@/common/auth";
 import { getStore } from "@/common/store";
@@ -16,6 +18,12 @@ const routes = [
     meta: { public: true, isLoginPage: true }
   },
   {
+    path: "/register",
+    name: "register",
+    component: RegisterForm,
+    meta: { public: true, isLoginPage: true }
+  },
+  {
     path: "/about",
     name: "about",
     component: AboutView
@@ -24,6 +32,12 @@ const routes = [
     path: "/:catchAll(.*)*",
     component: ErrorNotFoundView,
     meta: { public: true }
+  },
+  {
+    path: "/notes/create",
+    name: "createNote",
+    component: CreateNote,
+    meta: { requiresAuth: true }
   }
 ].concat(notesRoutes);
 

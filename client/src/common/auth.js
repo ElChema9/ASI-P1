@@ -1,13 +1,16 @@
 import { getStore } from "./store";
 import AccountRepository from "../repositories/AccountRepository";
 
-export default {
+const auth = {
   login,
   logout,
   getToken,
   isAdmin,
-  isAuthenticationChecked: isAuthenticationChecked()
+  isAuthenticationChecked: isAuthenticationChecked(),
+  register
 };
+
+export default auth;
 
 /**
  *
@@ -18,6 +21,15 @@ async function login(credentials) {
   const response = await AccountRepository.authenticate(credentials);
   _saveToken(response.token);
   return _authenticate();
+}
+async function register({ login, password }) {
+  const response = await AccountRepository.registerAccount({ login, password });
+  // Si el backend devuelve token y quieres loguear automáticamente:
+  if (response.token) {
+    _saveToken(response.token);
+    return _authenticate();
+  }
+  return response;
 }
 
 function logout() {
@@ -71,3 +83,4 @@ function isAuthenticationChecked() {
     }
   });
 }
+

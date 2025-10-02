@@ -4,6 +4,11 @@ const resource = "categories";
 
 export default {
   async findAll() {
-    return (await HTTP.get(resource)).data;
+    const response = await HTTP.get(resource);
+    return response.data;
+  },
+  async findOne(id) {
+    const response = await HTTP.get(`${resource}/${id}`);
+    return response.data;
   }
 };
