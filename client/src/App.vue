@@ -2,6 +2,7 @@
   <nav class="navbar navbar-expand-lg bg-body-tertiary">
     <div class="container-fluid">
       <router-link class="navbar-brand" to="/notes"> Notebook 2025/2026 </router-link>
+      
       <button
         class="navbar-toggler"
         type="button"
@@ -44,6 +45,11 @@
               </li>
             </ul>
           </li>
+          <li class="nav-item" v-if="isAdmin">
+            <router-link class="nav-link" to="/users" active-class="active">
+              Usuarios
+            </router-link>
+          </li>
         </ul>
         <span v-if="store.state.user.logged"> autenticado como {{ store.state.user.login }} </span>
         <ul class="navbar-nav">
@@ -66,6 +72,12 @@ export default {
     return {
       store: getStore()
     };
+  },
+  computed: {
+    isAdmin() {
+      // Usar la función isAdmin() del auth que verifica authority
+      return auth.isAdmin();
+    }
   },
   methods: {
     desautenticarme() {
@@ -102,7 +114,7 @@ nav {
 
 nav a {
   font-weight: bold;
-  color: #df0d3b;
+  color: #2c3e50;
   cursor: pointer;
 }
 </style>

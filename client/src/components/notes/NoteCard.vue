@@ -16,13 +16,19 @@
     <div class="card-body">
       <h5 class="card-title">{{ note.title }}</h5>
       <h6 class="card-subtitle mb-2 text-muted">
-        {{ formatDate(note.timestamp) }}
+        <router-link :to="{ name: 'noteDetail', params: { noteId: note.id } }">
+          {{ formatDate(note.timestamp) }}
+        </router-link>
       </h6>
       <p class="card-text">{{ note.content }}</p>
       <p>
-        <router-link :to="{ name: 'noteDetail', params: { noteId: note.id } }">
-          Detalle de la nota
-        </router-link>
+        <router-link
+        :to="{ name: 'editNote', params: { noteId: note.id } }"
+        class="btn btn-outline-secondary btn-sm ms-2"
+        v-if="isOwner"
+      >
+        Editar
+      </router-link>
       </p>
     </div>
     <div v-if="note.categories && note.categories.length > 0" class="card-footer">

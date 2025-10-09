@@ -27,6 +27,13 @@
           >
             {{ category.name }}
           </router-link>
+          <router-link
+          :to="{ name: 'editNote', params: { noteId: note.id } }"
+          class="btn btn-outline-secondary ms-2"
+          v-if="isOwner"
+        >
+          Editar
+        </router-link>
           <span v-if="index < note.categories.length - 1">, </span>
         </span>
       </div>
