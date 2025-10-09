@@ -2,14 +2,32 @@
   <div v-if="note != null" class="container mt-4">
     <div class="d-flex justify-content-between align-items-center mb-3">
       <h1>{{ note.title || 'Sin título' }}</h1>
-      <button 
-        @click="toggleArchive" 
-        class="btn" 
-        :class="note.archived ? 'btn-success' : 'btn-warning'"
-        :disabled="isLoading"
-      >
-        {{ note.archived ? 'Desarchivar' : 'Archivar' }}
-      </button>
+      <div class="d-flex gap-2">
+        <button 
+          v-if="isOwner"
+          @click="toggleArchive" 
+          class="btn" 
+          :class="note.archived ? 'btn-success' : 'btn-warning'"
+          :disabled="isLoading"
+        >
+          {{ note.archived ? 'Desarchivar' : 'Archivar' }}
+        </button>
+        <router-link
+          v-if="isOwner"
+          :to="{ name: 'editNote', params: { noteId: note.id } }"
+          class="btn btn-outline-secondary"
+        >
+          Editar
+        </router-link>
+        <button
+          v-if="isOwner"
+          @click="deleteNote"
+          class="btn btn-outline-danger"
+          :disabled="isLoading"
+        >
+          Eliminar
+        </button>
+      </div>
     </div>
     
     <div v-if="note.content" class="mb-3">
@@ -27,13 +45,6 @@
           >
             {{ category.name }}
           </router-link>
-          <router-link
-          :to="{ name: 'editNote', params: { noteId: note.id } }"
-          class="btn btn-outline-secondary ms-2"
-          v-if="isOwner"
-        >
-          Editar
-        </router-link>
           <span v-if="index < note.categories.length - 1">, </span>
         </span>
       </div>
@@ -53,6 +64,8 @@
 
 <script>
 import NoteRepository from "@/repositories/NoteRepository";
+import auth from "@/common/auth";
+import { getStore } from "@/common/store";
 
 export default {
   data() {
@@ -60,6 +73,14 @@ export default {
       note: null,
       isLoading: false
     };
+  },
+  computed: {
+    isOwner() {
+      if (!this.note) return false;
+      const store = getStore();
+      const currentUser = store.state.user.login;
+      return this.note.owner === currentUser;
+    }
   },
   async mounted() {
     this.note = await NoteRepository.findOne(this.$route.params.noteId);
@@ -78,16 +99,66 @@ export default {
       this.isLoading = true;
       
       try {
-        if (this.note.archived) {
-          await NoteRepository.unarchive(this.note.id);
-          this.note.archived = false;
-        } else {
-          await NoteRepository.archive(this.note.id);
-          this.note.archived = true;
-        }
+        // Cambiar el estado de archived directamente
+        this.note.archived = !this.note.archived;
+        
+        // Actualizar en el servidor
+        await NoteRepository.update(this.note);
+        
       } catch (error) {
         console.error('Error al archivar/desarchivar:', error);
-        alert('Error al actualizar la nota');
+        
+        if (error.response?.status === 403) {
+          alert('No tienes permisos para modificar esta nota. Solo el propietario puede archivar/desarchivar sus notas.');
+        } else if (error.response?.status === 401) {
+          alert('Sesión expirada. Por favor, inicia sesión de nuevo.');
+          auth.logout();
+          this.$router.push('/');
+        } else if (error.response?.status === 404) {
+          alert('Esta funcionalidad aún no está implementada en el servidor.');
+        } else {
+          alert('Error al actualizar la nota: ' + (error.response?.data?.message || error.message));
+        }
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async deleteNote() {
+      // Mostrar mensaje de confirmación
+      const confirmDelete = confirm(
+        `¿Estás seguro de que quieres eliminar la nota "${this.note.title || 'Sin título'}"?\n\nEsta acción no se puede deshacer.`
+      );
+      
+      if (!confirmDelete) {
+        return;
+      }
+      
+      this.isLoading = true;
+      
+      try {
+        await NoteRepository.delete(this.note.id);
+        
+        // Mostrar mensaje de éxito
+        alert('Nota eliminada correctamente');
+        
+        // Redirigir al listado de notas
+        this.$router.push('/notes');
+        
+      } catch (error) {
+        console.error('Error al eliminar nota:', error);
+        
+        if (error.response?.status === 403) {
+          alert('No tienes permisos para eliminar esta nota. Solo el propietario puede eliminar sus notas.');
+        } else if (error.response?.status === 401) {
+          alert('Sesión expirada. Por favor, inicia sesión de nuevo.');
+          auth.logout();
+          this.$router.push('/');
+        } else if (error.response?.status === 404) {
+          alert('La nota no existe o ya fue eliminada.');
+          this.$router.push('/notes');
+        } else {
+          alert('Error al eliminar la nota: ' + (error.response?.data?.message || error.message));
+        }
       } finally {
         this.isLoading = false;
       }
@@ -95,3 +166,9 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.gap-2 {
+  gap: 0.5rem;
+}
+</style>

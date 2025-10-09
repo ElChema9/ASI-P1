@@ -12,6 +12,9 @@ export default defineConfig({
       "@": fileURLToPath(new URL("./src", import.meta.url))
     }
   },
+  server: {
+    historyApiFallback: true
+  },
   // Optional: Silence Sass deprecation warnings. See note below.
   css: {
     preprocessorOptions: {

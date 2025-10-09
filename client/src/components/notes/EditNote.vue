@@ -95,28 +95,27 @@ export default {
       this.successMessage = "";
 
       // Validación
-      if (
-        (!this.note.title || this.note.title.trim() === "") &&
-        (!this.note.content || this.note.content.trim() === "")
-      ) {
-        this.errorMessage = "Debes indicar al menos título o contenido.";
-        return;
-      }
-      if (this.note.title && this.note.title.length > 300) {
-        this.errorMessage = "El título no puede superar los 300 caracteres.";
-        return;
-      }
+        const safeTitle = (this.note.title || '').trim();
+        const safeContent = (this.note.content || '').trim();
+        if (safeTitle === "" && safeContent === "") {
+          this.errorMessage = "Debes indicar al menos título o contenido.";
+          return;
+        }
+        if (safeTitle.length > 300) {
+          this.errorMessage = "El título no puede superar los 300 caracteres.";
+          return;
+        }
 
-      this.isLoading = true;
+        this.isLoading = true;
 
-      // Construir objeto para enviar
-      const noteData = {
-        id: this.note.id,
-        title: this.note.title.trim() || null,
-        content: this.note.content.trim() || null,
-        archived: this.note.archived,
-        categories: this.selectedCategoryIds.map(id => ({ id: id }))
-      };
+        // Construir objeto para enviar
+        const noteData = {
+          id: this.note.id,
+          title: safeTitle || null,
+          content: safeContent || null,
+          archived: this.note.archived,
+          categories: this.selectedCategoryIds.map(id => ({ id: id }))
+        };
 
       try {
         await NoteRepository.update(noteData);

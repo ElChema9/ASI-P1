@@ -44,26 +44,12 @@ export default {
     const response = await HTTP.put(`${resource}/${note.id}`, note);
     return response.data;
   },
-  async archive(id) {
-    const currentNote = await this.findOne(id);
-    const noteToUpdate = {
-      id: currentNote.id,
-      title: currentNote.title,
-      content: currentNote.content,
-      archived: true,
-      categories: currentNote.categories
-    };
-    return await this.update(noteToUpdate);
+  async delete(id) {
+    const response = await HTTP.delete(`${resource}/${id}`);
+    return response.data;
   },
-  async unarchive(id) {
-    const currentNote = await this.findOne(id);
-    const noteToUpdate = {
-      id: currentNote.id,
-      title: currentNote.title,
-      content: currentNote.content,
-      archived: false,
-      categories: currentNote.categories
-    };
-    return await this.update(noteToUpdate);
+  async changeOwner(id, ownerData) {
+    const response = await HTTP.put(`${resource}/${id}/owner`, ownerData);
+    return response.data;
   }
 };

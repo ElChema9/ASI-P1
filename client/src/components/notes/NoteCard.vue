@@ -1,7 +1,20 @@
 <template>
   <div class="card" style="width: 18rem">
     <div class="card-header d-flex justify-content-between align-items-center">
-      <span>{{ note.owner }}</span>
+      <div class="d-flex flex-column">
+        <router-link 
+          v-if="isAdmin" 
+          :to="{ name: 'userNotes', params: { login: note.owner }, query: { from: 'notes' } }"
+          class="badge bg-primary mb-1 text-decoration-none user-link"
+          :title="`Ver todas las notas de ${note.owner}`"
+        >
+          {{ note.owner }}
+        </router-link>
+        <span v-else>{{ note.owner }}</span>
+        <span v-if="isAdmin" class="badge" :class="note.archived ? 'bg-secondary' : 'bg-success'">
+          {{ note.archived ? 'Archivada' : 'Activa' }}
+        </span>
+      </div>
       <button 
         v-if="isOwner"
         @click="toggleArchive" 
@@ -11,7 +24,6 @@
       >
         {{ note.archived ? 'Desarchivar' : 'Archivar' }}
       </button>
-      <small v-else class="text-muted">No archivable</small>
     </div>
     <div class="card-body">
       <h5 class="card-title">{{ note.title }}</h5>
@@ -28,6 +40,21 @@
         v-if="isOwner"
       >
         Editar
+      </router-link>
+      <button
+        v-if="isOwner"
+        @click="deleteNote"
+        class="btn btn-outline-danger btn-sm ms-2"
+        :disabled="isLoading"
+      >
+        Eliminar
+      </button>
+      <router-link
+        v-if="isAdmin"
+        :to="{ name: 'changeNoteOwner', params: { id: note.id } }"
+        class="btn btn-outline-primary btn-sm ms-2"
+      >
+        Cambiar creador
       </router-link>
       </p>
     </div>
@@ -69,6 +96,9 @@ export default {
       const currentUser = store.state.user.login;
       console.log('Usuario actual:', currentUser, 'Propietario nota:', this.note.owner);
       return this.note.owner === currentUser;
+    },
+    isAdmin() {
+      return auth.isAdmin();
     }
   },
   methods: {
@@ -88,28 +118,53 @@ export default {
       this.isLoading = true;
       
       try {
-        if (this.note.archived) {
-          await NoteRepository.unarchive(this.note.id);
-          this.note.archived = false;
-        } else {
-          await NoteRepository.archive(this.note.id);
-          this.note.archived = true;
-        }
+         // Cambiar el estado de archived directamente
+        this.note.archived = !this.note.archived;
+        
+        // Actualizar en el servidor
+        await NoteRepository.update(this.note);
         
         this.$emit('noteUpdated');
       } catch (error) {
         console.error('Error al archivar/desarchivar:', error);
+      } finally {
+        this.isLoading = false;
+      }
+    },
+    async deleteNote() {
+      // Mostrar mensaje de confirmación
+      const confirmDelete = confirm(
+        `¿Estás seguro de que quieres eliminar la nota "${this.note.title || 'Sin título'}"?\n\nEsta acción no se puede deshacer.`
+      );
+      
+      if (!confirmDelete) {
+        return;
+      }
+      
+      this.isLoading = true;
+      
+      try {
+        await NoteRepository.delete(this.note.id);
+        
+        // Emitir evento para que el componente padre actualice la lista
+        this.$emit('noteDeleted', this.note.id);
+        
+        // Mostrar mensaje de éxito
+        alert('Nota eliminada correctamente');
+        
+      } catch (error) {
+        console.error('Error al eliminar nota:', error);
         
         if (error.response?.status === 403) {
-          alert('No tienes permisos para modificar esta nota. Solo el propietario puede archivar/desarchivar sus notas.');
+          alert('No tienes permisos para eliminar esta nota. Solo el propietario puede eliminar sus notas.');
         } else if (error.response?.status === 401) {
           alert('Sesión expirada. Por favor, inicia sesión de nuevo.');
           auth.logout();
           this.$router.push('/');
         } else if (error.response?.status === 404) {
-          alert('Esta funcionalidad aún no está implementada en el servidor.');
+          alert('La nota no existe o ya fue eliminada.');
         } else {
-          alert('Error al actualizar la nota: ' + (error.response?.data?.message || error.message));
+          alert('Error al eliminar la nota: ' + (error.response?.data?.message || error.message));
         }
       } finally {
         this.isLoading = false;
@@ -118,3 +173,17 @@ export default {
   }
 };
 </script>
+
+<style scoped>
+.user-link {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.user-link:hover {
+  background-color: #0056b3 !important;
+  transform: scale(1.05);
+  text-decoration: none !important;
+  color: white !important;
+}
+</style>
